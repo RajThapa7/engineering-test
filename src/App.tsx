@@ -6,8 +6,11 @@ import {
   useEffect,
   useState,
 } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Button from "./components/Button/Button";
 import NumberInput from "./components/NumberInput/NumberInput";
+import api from "./helper/axios";
 
 function App() {
   const otpBoxLength = 6;
@@ -22,6 +25,7 @@ function App() {
   );
 
   const [errorIndex, setErrorIndex] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   //shifts focus on the first otp input on page load
   useEffect(() => {
@@ -120,9 +124,9 @@ function App() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (otpValue.length < otpBoxLength) {
-      alert("please complete the otp");
+      toast.error("Please complete the otp");
       return;
     }
 
@@ -130,7 +134,7 @@ function App() {
 
     if (!numberRegex.test(otp)) {
       const array: number[] = [];
-      alert("only no ma h bor");
+      toast.error("Please enter a valid OTP");
       otpValue.forEach((item, index) => {
         if (isNaN(parseInt(item))) {
           array.push(index);
@@ -141,12 +145,22 @@ function App() {
       return;
     }
 
-    alert(otp);
     setErrorIndex([]);
-  };
 
-  console.log(errorIndex, "error index");
-  console.log(otpValue, "otp value");
+    setIsLoading(true);
+    await api
+      .post("otp/validate", {
+        otp,
+      })
+      .then((res) => toast.success(res.data.message))
+      .catch((err) => {
+        toast.error(err.response.data.message);
+      })
+      .finally(() => {
+        setIsLoading(false);
+        setOtpValue(Array(otpBoxLength).fill(""));
+      });
+  };
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     //get the copied value and extract length equal to otp box length and set the otp value
@@ -158,6 +172,7 @@ function App() {
 
   return (
     <div className="flex gap-8 flex-col items-center justify-center min-h-screen">
+      <ToastContainer autoClose={1500} />
       <h2 className="font-semibold text-2xl">Verification code:</h2>
       <div className="flex flex-row gap-4">
         {Array.from({ length: otpBoxLength }).map((_, index) => (
@@ -174,6 +189,7 @@ function App() {
       </div>
       <div>
         <Button
+          isLoading={isLoading}
           onClick={() => {
             handleSubmit();
           }}
