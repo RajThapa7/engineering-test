@@ -6,13 +6,15 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Button from "./components/Button/Button";
-import NumberInput from "./components/NumberInput/NumberInput";
-import api from "./helper/axios";
+import Button from "../components/Button/Button";
+import NumberInput from "../components/NumberInput/NumberInput";
+import api from "../helper/axios";
 
-function App() {
+function Home() {
+  const navigate = useNavigate();
   const otpBoxLength = 6;
   const numberRegex = new RegExp(`^\\d{${otpBoxLength}}$`);
 
@@ -152,7 +154,10 @@ function App() {
       .post("otp/validate", {
         otp,
       })
-      .then((res) => toast.success(res.data.message))
+      .then((res) => {
+        toast.success(res.data.message);
+        navigate("/success");
+      })
       .catch((err) => {
         toast.error(err.response.data.message);
       })
@@ -202,4 +207,4 @@ function App() {
   );
 }
 
-export default App;
+export default Home;
